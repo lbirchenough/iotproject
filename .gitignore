@@ -1,6 +1,8 @@
 venv/
 config.py
 certs/
+__pycache__/
+*.pyc
 
 main_BU.py
 main_simple_test.py

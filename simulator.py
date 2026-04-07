@@ -7,6 +7,7 @@ Usage: python simulator.py <box-id>
        python simulator.py box2
 """
 
+import glob
 import json
 import sys
 import time
@@ -14,13 +15,20 @@ import random
 import ssl
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
+import requests
+from config import API_KEY
+
+# --- LARAVEL CONFIG ---
+LARAVEL_URL = "https://iotproject-wamacq4e.on-forge.com/api/sensor-data"
+#LARAVEL_URL = "http://livewire_test.test/api/sensor-data"
 
 # --- ARG ---
 if len(sys.argv) != 2:
     print("Usage: python simulator.py <box-id>  (e.g. box1, box2)")
     sys.exit(1)
 
-BOX_ID = sys.argv[1]  # e.g. "box1"
+BOX_ID  = sys.argv[1]           # e.g. "box1"
+BOX_NUM = int(''.join(filter(str.isdigit, BOX_ID)))  # e.g. 1
 
 # --- CONFIG ---
 AWS_ENDPOINT   = "a38kgyfs1sv13m-ats.iot.ap-southeast-2.amazonaws.com"
@@ -55,6 +63,25 @@ def on_connect(client, userdata, flags, rc, properties=None):
 
 def on_publish(client, userdata, mid, rc=None, properties=None):
     print("[MQTT] Publish confirmed, mid=", mid)
+
+
+# --- LARAVEL POST ---
+
+def post_to_laravel(sensor_id, value, unit, sensor_type):
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        resp = requests.post(
+            LARAVEL_URL,
+            json={"sensor_name": sensor_id, "value": value, "unit": unit, "type": sensor_type, "time": timestamp},
+            headers={"X-API-Key": API_KEY, "Accept": "application/json"},
+            timeout=10
+        )
+        if resp.status_code in (200, 201):
+            print(f"[Laravel] OK {sensor_type}={value}{unit} HTTP {resp.status_code}")
+        else:
+            print(f"[Laravel] FAIL HTTP {resp.status_code}")
+    except Exception as e:
+        print(f"[Laravel] ERROR: {e}")
 
 
 # --- SIMULATED SENSOR READS ---
@@ -108,9 +135,11 @@ try:
 
         client.publish(TOPIC_DISTANCE, distance_payload)
         print(f"[Sent] {TOPIC_DISTANCE}: {distance_payload}")
+        post_to_laravel(BOX_NUM, distance, "cm", "distance")
 
         client.publish(TOPIC_SWITCH, switch_payload)
         print(f"[Sent] {TOPIC_SWITCH}: {switch_payload}")
+        post_to_laravel(BOX_NUM, switch, "binary", "switch")
 
         time.sleep(PUBLISH_EVERY)
 
