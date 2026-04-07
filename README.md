@@ -1,14 +1,36 @@
 # ESP8266 Dual Sensor IoT Node
-### SHARP 2Y0A21 Range + Digital Switch → Laravel API
 
-An ESP8266 D1 Mini WiFi microcontroller reads two sensors every 30 seconds and POSTs the data to a live Laravel web API:
+## Overview
 
-- **Sensor 1:** SHARP 2Y0A21 infrared range sensor (10–80 cm)
-- **Sensor 2:** Any digital switch or float sensor (on/off)
+An ESP8266 D1 Mini microcontroller reads two sensors every 30 seconds — a SHARP 2Y0A21 infrared distance sensor and a digital switch — and ships the data through a cloud pipeline to InfluxDB and Grafana. The project started as a simple Laravel backend with a Blade frontend for viewing sensor results, then expanded into a full cloud-native AWS pipeline as a way to explore IoT infrastructure end-to-end. A PC-based simulator is included so the pipeline can be tested without physical hardware.
 
-Data is viewable at: `https://livewire_test-wamacq4e.on-forge.com/sensor-data`  
+## Tech Stack
 
+- **Device:** ESP8266 D1 Mini (MicroPython)
+- **Sensors:** SHARP 2Y0A21 IR distance sensor, digital switch
+- **Transport:** MQTT over TLS (AWS IoT Core)
+- **Pipeline:** AWS IoT Core → Kinesis Data Streams → Lambda (Python)
+- **Storage:** InfluxDB Cloud Serverless
+- **Visualisation:** Grafana Cloud
+- **Laravel API:** Parallel HTTP POST to a Laravel backend (original path)
 
+## Architecture
+
+```
+ESP8266 / Simulator → AWS IoT Core → Kinesis → Lambda → InfluxDB → Grafana
+                    ↘ Laravel API (HTTPS POST, original path)
+```
+
+## Challenges & Learnings
+
+Write about what you found challenging or interesting here.
+
+## Links
+
+- [Laravel sensor data view](https://livewire_test-wamacq4e.on-forge.com/sensor-data)
+- [Grafana dashboard](https://lbirchenprojectiot.grafana.net/public-dashboards/1471ef71123f4562ac81b2c83ca5a912?refresh=30s&from=now-1h&to=now&timezone=browser)
+
+---
 
 ## Files
 
@@ -16,7 +38,37 @@ Data is viewable at: `https://livewire_test-wamacq4e.on-forge.com/sensor-data`
 |---|---|
 | `boot.py` | WiFi connect + NTP time sync (runs on power-on) |
 | `main.py` | Sensor reading + API posting loop |
+| `simulator.py` | PC-based device simulator for testing the pipeline without hardware |
+| `config.example.py` | Template for `config.py` (WiFi + API credentials) |
 | `README.md` | This file |
+
+
+## Simulator
+
+`simulator.py` mimics the ESP8266, publishing the same MQTT payload format to AWS IoT Core. Useful for testing the full pipeline without physical hardware.
+
+**Cert setup:**
+
+Place the AWS-generated cert files for each device into a subfolder matching the box ID:
+```
+certs/
+  box1/
+    <id>-certificate.pem.crt
+    <id>-private.pem.key
+  box2/
+    <id>-certificate.pem.crt
+    <id>-private.pem.key
+```
+
+The script auto-discovers the cert and key by filename pattern — no renaming needed.
+
+**Usage:**
+```
+python simulator.py box1
+python simulator.py box2
+```
+
+Two instances can run simultaneously to simulate multiple devices.
 
 
 ## Hardware Required

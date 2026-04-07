@@ -1,23 +1,47 @@
 """
 simulator.py — pretends to be the ESP8266, publishing sensor data to AWS IoT Core.
 Publishes to the same topics and payload format as the real device.
+
+Usage: python simulator.py <box-id>
+  e.g. python simulator.py box1
+       python simulator.py box2
 """
 
 import json
+import sys
 import time
 import random
 import ssl
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
-# --- CONFIG ---
-AWS_ENDPOINT  = "a38kgyfs1sv13m-ats.iot.ap-southeast-2.amazonaws.com"
-CERT_FILE     = "certs/5f2415de5fd85942e566713f8e5cefde4ba2c6eb5f4db687c25fa049bb8f33c4-certificate.pem.crt"
-KEY_FILE      = "certs/5f2415de5fd85942e566713f8e5cefde4ba2c6eb5f4db687c25fa049bb8f33c4-private.pem.key"
-AWS_PORT      = 8883
-CLIENT_ID     = "esp8266-box1"
 
-TOPIC_DISTANCE = "esp8266/box1/distance"
-TOPIC_SWITCH   = "esp8266/box1/switch"
+# --- ARG ---
+if len(sys.argv) != 2:
+    print("Usage: python simulator.py <box-id>  (e.g. box1, box2)")
+    sys.exit(1)
+
+BOX_ID = sys.argv[1]  # e.g. "box1"
+
+# --- CONFIG ---
+AWS_ENDPOINT   = "a38kgyfs1sv13m-ats.iot.ap-southeast-2.amazonaws.com"
+
+import glob
+_cert_dir = f"certs/{BOX_ID}"
+_certs = glob.glob(f"{_cert_dir}/*-certificate.pem.crt")
+_keys  = glob.glob(f"{_cert_dir}/*-private.pem.key")
+if not _certs or not _keys:
+    print(f"[Error] Could not find cert/key in {_cert_dir}/")
+    print("  Expected: <id>-certificate.pem.crt and <id>-private.pem.key")
+    sys.exit(1)
+CERT_FILE = _certs[0]
+KEY_FILE  = _keys[0]
+print(f"[Certs] Using cert: {CERT_FILE}")
+print(f"[Certs] Using key:  {KEY_FILE}")
+AWS_PORT       = 8883
+CLIENT_ID      = f"esp8266-{BOX_ID}"
+
+TOPIC_DISTANCE = f"esp8266/{BOX_ID}/distance"
+TOPIC_SWITCH   = f"esp8266/{BOX_ID}/switch"
 
 PUBLISH_EVERY  = 30  # seconds
 
@@ -57,7 +81,7 @@ client.tls_set_context(tls_ctx)
 client.connect(AWS_ENDPOINT, AWS_PORT)
 client.loop_start()
 
-print(f"[Sim] Publishing every {PUBLISH_EVERY}s. Ctrl+C to stop.\n")
+print(f"[Sim] {CLIENT_ID} publishing every {PUBLISH_EVERY}s. Ctrl+C to stop.\n")
 
 try:
     while True:
@@ -67,7 +91,7 @@ try:
         measured_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         distance_payload = json.dumps({
-            "device_id": "esp8266-box1",
+            "device_id": CLIENT_ID,
             "sensor_type": "distance",
             "value": distance,
             "unit": "cm",
@@ -75,7 +99,7 @@ try:
         })
 
         switch_payload = json.dumps({
-            "device_id": "esp8266-box1",
+            "device_id": CLIENT_ID,
             "sensor_type": "switch",
             "value": switch,
             "unit": "binary",
