@@ -277,7 +277,7 @@ Press `Ctrl+D` to soft-reset and watch the full startup sequence.
 Expected output every 30 seconds:
 ```
 [boot] Starting in 3s - press Ctrl+C to abort
-[WiFi] Connecting to Pixel8aHiro ...
+[WiFi] Connecting to [WIFI SSID] ...
 [WiFi] Connected!
   IP      : 192.168.x.x
   Gateway : 192.168.x.1
@@ -354,6 +354,6 @@ Once `boot.py` and `main.py` are uploaded, the USB cable is no longer needed.
 | WiFi stuck on `waiting 1, 2, 3...` | ESP8266 is 2.4GHz only; check SSID/password case; move board closer to router |
 | SENSOR1 always skipped | Check red wire is on 5V (not 3.3V); yellow wire on A0; object must be 10–80 cm away; ADC debug should read 80+ |
 | Switch always reads 0 (open) | Confirm wire is on D2 not D0; confirm other terminal is on a GND pin |
-| HTTP 401 Unauthorised | API key has changed — contact Hiro for the updated key, edit `API_KEY` in `main.py` and re-upload |
-| HTTP 422 Validation Error | A payload field doesn't match server expectations — contact Hiro to check API validation rules |
+| HTTP 401 Unauthorised | API key has changed edit `API_KEY` in `main.py` and re-upload |
+| HTTP 422 Validation Error | A payload field doesn't match server expectations |
 | Device reboots every 10 seconds | Power supply too weak — must be 5V at 1A minimum; avoid shared USB chargers |
