@@ -3,6 +3,8 @@ config.py
 certs/
 __pycache__/
 *.pyc
+.env
+docker-compose.override.yml
 
 main_BU.py
 main_simple_test.py

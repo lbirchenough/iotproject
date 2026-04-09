@@ -27,7 +27,7 @@ Write about what you found challenging or interesting here.
 
 ## Links
 
-- [Laravel sensor data view](https://iotproject-wamacq4e.on-forge.com/sensor-data) (test@test.com / hiroluke123)
+- [Laravel sensor data view](https://livewire-test-8riau887.on-forge.com/sensor-data)
 - [Grafana dashboard](https://lbirchenprojectiot.grafana.net/public-dashboards/1471ef71123f4562ac81b2c83ca5a912?refresh=30s&from=now-1h&to=now&timezone=browser)
 
 ---
@@ -113,7 +113,7 @@ Two instances can run simultaneously to simulate multiple devices.
 | Setting | Value |
 |---|---|
 | WiFi Band | 2.4GHz only (ESP8266 cannot connect to 5GHz) |
-| API endpoint | `https://iotproject-wamacq4e.on-forge.com/api/sensor-data` |
+| API endpoint | `https://livewire-test-8riau887.on-forge.com/api/sensor-data` |
 | Timezone | UTC+8 |
 | Post interval | Every 30 seconds |
 

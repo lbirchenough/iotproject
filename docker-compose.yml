@@ -1,0 +1,18 @@
+services:
+  box1:
+    build: .
+    command: box1
+    restart: unless-stopped
+    environment:
+      - API_KEY=${API_KEY}
+    volumes:
+      - ./certs:/app/certs:ro
+
+  box2:
+    build: .
+    command: box2
+    restart: unless-stopped
+    environment:
+      - API_KEY=${API_KEY}
+    volumes:
+      - ./certs:/app/certs:ro

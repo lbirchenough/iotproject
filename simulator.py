@@ -9,6 +9,7 @@ Usage: python simulator.py <box-id>
 
 import glob
 import json
+import os
 import sys
 import time
 import random
@@ -16,10 +17,15 @@ import ssl
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 import requests
-from config import API_KEY
+
+try:
+    API_KEY = os.environ["API_KEY"]
+except KeyError:
+    from config import API_KEY
 
 # --- LARAVEL CONFIG ---
-LARAVEL_URL = "https://iotproject-wamacq4e.on-forge.com/api/sensor-data"
+#LARAVEL_URL = "https://iotproject-wamacq4e.on-forge.com/api/sensor-data"
+LARAVEL_URL = "https://livewire-test-8riau887.on-forge.com/api/sensor-data"
 #LARAVEL_URL = "http://livewire_test.test/api/sensor-data"
 
 # --- ARG ---

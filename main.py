@@ -21,7 +21,7 @@ TOPIC_SWITCH   = b"esp8266/box1/switch"
 DEVICE_ID      = "esp8266-box1"
 UTC_OFFSET_S   = 8 * 3600
 PUBLISH_EVERY  = 30   # seconds between sensor reads/publishes
-API_HOST       = "iotproject-wamacq4e.on-forge.com"
+API_HOST       = "livewire-test-8riau887.on-forge.com"
 API_PATH       = "/api/sensor-data"
 API_PORT       = 443
 
