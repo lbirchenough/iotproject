@@ -2,7 +2,7 @@
 
 ## Overview
 
-An ESP8266 D1 Mini microcontroller reads two sensors every 30 seconds — a SHARP 2Y0A21 infrared distance sensor and a digital switch — and ships the data through a cloud pipeline to InfluxDB and Grafana. The project started as a simple Laravel backend with a Blade frontend for viewing sensor results, then expanded into a full cloud-native AWS pipeline as a way to explore IoT infrastructure end-to-end. A PC-based simulator is included so the pipeline can be tested without physical hardware.
+An ESP8266 D1 Mini microcontroller reads two sensors every 30 seconds (a SHARP 2Y0A21 infrared distance sensor and a digital switch) and ships the data through a cloud pipeline to InfluxDB and Grafana. The project started as a simple Laravel backend with a Livewire frontend for viewing sensor results, then expanded into a full cloud native AWS pipeline as a way to explore IoT infrastructure end to end. A PC based simulator is included so the pipeline can be tested without physical hardware.
 
 ## Tech Stack
 
