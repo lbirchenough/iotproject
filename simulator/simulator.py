@@ -2,12 +2,12 @@
 simulator.py — pretends to be the ESP8266, publishing sensor data to AWS IoT Core.
 Publishes to the same topics and payload format as the real device.
 
-Usage: python simulator.py <box-id>
-  e.g. python simulator.py box1
-       python simulator.py box2
+Usage: python simulator.py <box-id> [-laravel]
+  e.g. python simulator/simulator.py box1
+       python simulator/simulator.py box2 -laravel
 """
 
-import glob
+import argparse
 import json
 import os
 import sys
@@ -16,48 +16,45 @@ import random
 import ssl
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
-import requests
 
-try:
-    API_KEY = os.environ["API_KEY"]
-except KeyError:
-    from config import API_KEY
+# Add parent directory to path for shared config imports (local: ../terraform_config.py, Docker: ./terraform_config.py)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from terraform_config import AWS_ENDPOINT
 
-# --- LARAVEL CONFIG ---
-#LARAVEL_URL = "https://iotproject-wamacq4e.on-forge.com/api/sensor-data"
-LARAVEL_URL = "https://livewire-test-8riau887.on-forge.com/api/sensor-data"
-#LARAVEL_URL = "http://livewire_test.test/api/sensor-data"
-
-# --- ARG ---
-if len(sys.argv) != 2:
-    print("Usage: python simulator.py <box-id>  (e.g. box1, box2)")
-    sys.exit(1)
-
-BOX_ID  = sys.argv[1]           # e.g. "box1"
-BOX_NUM = int(''.join(filter(str.isdigit, BOX_ID)))  # e.g. 1
+# --- ARGS ---
+parser = argparse.ArgumentParser(description="IoT sensor simulator for AWS IoT Core")
+parser.add_argument("box_id", help="Box identifier (e.g. box1, box2)")
+parser.add_argument("-laravel", action="store_true", help="Also post data to the Laravel backend")
+args = parser.parse_args()
 
 # --- CONFIG ---
-AWS_ENDPOINT   = "a38kgyfs1sv13m-ats.iot.ap-southeast-2.amazonaws.com"
+BOX_ID         = args.box_id
+BOX_NUM        = int(''.join(filter(str.isdigit, BOX_ID)))
+AWS_PORT       = 8883
+CLIENT_ID      = f"iot_{BOX_ID}"
+_base          = os.path.dirname(os.path.abspath(__file__))
+_certs_dir     = os.path.join(_base, "..", "certs") if os.path.isdir(os.path.join(_base, "..", "certs")) else os.path.join(_base, "certs")
+CERT_FILE      = os.path.join(_certs_dir, f"iot_{BOX_ID}.pem")
+KEY_FILE       = os.path.join(_certs_dir, f"iot_{BOX_ID}.key")
+TOPIC_DISTANCE = f"iot_{BOX_ID}/distance"
+TOPIC_SWITCH   = f"iot_{BOX_ID}/switch"
+PUBLISH_EVERY  = 30  # seconds
+LARAVEL_URL    = "https://livewire-test-8riau887.on-forge.com/api/sensor-data"
 
-import glob
-_cert_dir = f"certs/{BOX_ID}"
-_certs = glob.glob(f"{_cert_dir}/*-certificate.pem.crt")
-_keys  = glob.glob(f"{_cert_dir}/*-private.pem.key")
-if not _certs or not _keys:
-    print(f"[Error] Could not find cert/key in {_cert_dir}/")
-    print("  Expected: <id>-certificate.pem.crt and <id>-private.pem.key")
+if args.laravel:
+    import requests
+    try:
+        API_KEY = os.environ["API_KEY"]
+    except KeyError:
+        from config import API_KEY
+
+if not os.path.exists(CERT_FILE) or not os.path.exists(KEY_FILE):
+    print(f"[Error] Could not find cert/key:")
+    print(f"  Expected: {CERT_FILE} and {KEY_FILE}")
     sys.exit(1)
-CERT_FILE = _certs[0]
-KEY_FILE  = _keys[0]
 print(f"[Certs] Using cert: {CERT_FILE}")
 print(f"[Certs] Using key:  {KEY_FILE}")
-AWS_PORT       = 8883
-CLIENT_ID      = f"esp8266-{BOX_ID}"
-
-TOPIC_DISTANCE = f"esp8266/{BOX_ID}/distance"
-TOPIC_SWITCH   = f"esp8266/{BOX_ID}/switch"
-
-PUBLISH_EVERY  = 30  # seconds
 
 
 # --- CALLBACKS ---
@@ -141,11 +138,13 @@ try:
 
         client.publish(TOPIC_DISTANCE, distance_payload)
         print(f"[Sent] {TOPIC_DISTANCE}: {distance_payload}")
-        post_to_laravel(BOX_NUM, distance, "cm", "distance")
 
         client.publish(TOPIC_SWITCH, switch_payload)
         print(f"[Sent] {TOPIC_SWITCH}: {switch_payload}")
-        post_to_laravel(BOX_NUM, switch, "binary", "switch")
+
+        if args.laravel:
+            post_to_laravel(BOX_NUM, distance, "cm", "distance")
+            post_to_laravel(BOX_NUM, switch, "binary", "switch")
 
         time.sleep(PUBLISH_EVERY)
 

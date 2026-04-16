@@ -1,0 +1,11 @@
+influxdb_url    = ""
+influxdb_token  = ""
+influxdb_org    = ""
+influxdb_bucket = ""
+
+grafana_url  = ""
+grafana_auth = ""
+
+# Uncomment if not using AWS CLI credentials
+# aws_access_key = ""
+# aws_secret_key = ""
