@@ -8,17 +8,18 @@ import ssl
 import socket
 from umqtt.simple import MQTTClient
 from config import SSID, PASSWORD, API_KEY
+from terraform_config import AWS_ENDPOINT
 
 # --- SAFETY DELAY (mpremote "Insurance Policy") ---
 print("[System] Booting in 5s... Press Ctrl+C now to intercept.")
 time.sleep(5)
 
 # --- CONFIGURATION ---
-aws_endpoint   = b"a38kgyfs1sv13m-ats.iot.ap-southeast-2.amazonaws.com"
-client_id      = b"esp8266-box1"
-TOPIC_DISTANCE = b"esp8266/box1/distance"
-TOPIC_SWITCH   = b"esp8266/box1/switch"
-DEVICE_ID      = "esp8266-box1"
+aws_endpoint   = AWS_ENDPOINT.encode()
+client_id      = b"iot_box1"
+TOPIC_DISTANCE = b"iot_box1/distance"
+TOPIC_SWITCH   = b"iot_box1/switch"
+DEVICE_ID      = "iot_box1"
 UTC_OFFSET_S   = 8 * 3600
 PUBLISH_EVERY  = 30   # seconds between sensor reads/publishes
 API_HOST       = "livewire-test-8riau887.on-forge.com"
