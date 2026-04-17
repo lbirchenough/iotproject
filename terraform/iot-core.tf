@@ -64,16 +64,24 @@ resource "aws_iot_policy_attachment" "iot_box_policy_attachment" {
 }
 
 resource "aws_iot_topic_rule" "iot_core_rule" {
-  for_each    = toset(local.box_ids)
-  name        = "iot_${each.value}_kinesis"
-  description = "Sending iot_${each.value} data to Kinesis stream"
+  for_each = toset(local.box_ids)
+
+  # name        = "iot_${each.value}_kinesis"
+  # description = "Sending iot_${each.value} data to Kinesis stream"
+  name        = "iot_${each.value}_lambda"
+  description = "Forwarding iot_${each.value} data directly to Lambda"
+
   enabled     = true
   sql         = "SELECT * FROM 'iot_${each.value}/#'"
   sql_version = "2016-03-23"
 
-  kinesis {
-    stream_name   = aws_kinesis_stream.iot_box_kinesis_stream.name
-    role_arn      = aws_iam_role.iot_box_role.arn
-    partition_key = "$${topic()}"
+  # kinesis {
+  #   stream_name   = aws_kinesis_stream.iot_box_kinesis_stream.name
+  #   role_arn      = aws_iam_role.iot_box_role.arn
+  #   partition_key = "$${topic()}"
+  # }
+
+  lambda {
+    function_arn = aws_lambda_function.iot_lambda_function.arn
   }
 }
