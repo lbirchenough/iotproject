@@ -67,6 +67,38 @@ The AWS pipeline and Grafana dashboard are provisioned with Terraform. InfluxDB 
    terraform apply
    ```
 
+### Terraform State — Local vs. S3 Backend
+
+By default Terraform stores state in a local `terraform.tfstate` file alongside the configs. That's fine for a solo project on one machine, but it means the state lives only on your laptop — lose it and Terraform no longer knows what it manages.
+
+`terraform/provider.tf` contains an S3 backend block for storing state remotely in an S3 bucket (with native state locking via `use_lockfile`). Pick one of the two options below before running `terraform init`.
+
+**Option A — Local state (simplest, single machine)**
+
+Comment out the `backend "s3"` block in `terraform/provider.tf` and run `terraform init` as normal. State will live in `terraform/terraform.tfstate`.
+
+**Option B — Remote state in S3 (recommended for anything shared or long-lived)**
+
+The `backend "s3"` block in `terraform/provider.tf` is a **partial config** — it omits the bucket and region so those values can be supplied per-user at init time via a gitignored `backend.hcl`. This keeps account-specific details out of the repo and lets anyone clone the project without having to edit Terraform files to use their own bucket.
+
+1. Create an S3 bucket in your AWS account (e.g. via the console):
+   - Same region as the rest of the stack (`ap-southeast-2` by default)
+   - **Versioning: Enabled** (so state can be recovered from accidental deletion/corruption)
+   - **Block all public access: On**
+   - Default encryption (SSE-S3 is fine)
+2. Copy `terraform/backend.hcl.example` to `terraform/backend.hcl` and fill in your bucket name and region:
+   ```hcl
+   bucket = "your-tfstate-bucket-name"
+   region = "ap-southeast-2"
+   ```
+3. Initialise with the backend config:
+   ```
+   terraform init -backend-config=backend.hcl
+   ```
+   If you already had local state, add `-migrate-state` to copy it up to S3. Once migrated, delete the local `terraform.tfstate` and `terraform.tfstate.backup` files.
+
+Whoever runs Terraform needs `s3:ListBucket` on the bucket and `s3:GetObject`/`PutObject` on the state key plus `s3:GetObject`/`PutObject`/`DeleteObject` on the `.tflock` key. A user with admin credentials already has this.
+
 ### Tear down
 
 ```

@@ -15,5 +15,6 @@ main_simple_test.py
 .terraform/
 .terraform.lock.hcl
 *.tfvars
+backend.hcl
 terraform_config.py
 lambda_function.zip
